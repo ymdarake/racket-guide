@@ -1,8 +1,0 @@
-#lang racket
-
-
-; 16.1.1 define-syntax-rule
-(define-syntax-rule (swap x y)
-  (let ([temp x])
-    (set! x y)
-    (set! y tmp)))
