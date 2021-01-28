@@ -72,6 +72,7 @@
      (let ([tmp from0])
        (set! to from) ...
        (set! to0 tmp))]))
+; cf. https://docs.racket-lang.org/reference/stx-patterns.html
 
 (let ([a 1])
     (rotate-efficiently a)
