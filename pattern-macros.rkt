@@ -87,3 +87,20 @@
     (list a b c)); '(2 3 1)
 
 
+;; 16.1.5 Identifier Macros
+
+; An identifier macro is a pattern-matching macro that works when used by itself without parentheses. For example, we can define val as an identifier macro that expands to (get-val), so (+ val 3) would expand to (+ (get-val) 3).
+(define-syntax val
+  (lambda (stx)
+    (syntax-case stx ()
+      [val (identifier? (syntax val)) (syntax (get-val))])))
+(define-values (get-val put-val!)
+  (let ([private-val 0])
+    (values (lambda () private-val)
+            (lambda (v) (set! private-val v)))))
+
+val
+(+ val 3)
+(put-val! 4)
+val
+
