@@ -137,3 +137,64 @@ val3
 val2
 val
 
+
+;; 16.1.8 Extended Example: Call-by-Reference Functions
+
+; For example, if define-cbr is like define except that it defines a call-by-reference function, then
+;(define-cbr (f a b)
+;  (swap a b))
+;
+;(let ([x 1] [y 2])
+;  (f x y)
+;  (list x y))
+; produces (2 1).
+
+(define-syntax-rule (define-cbr (id arg ...) body)
+  (begin
+    (define-syntax id
+      (syntax-rules ()
+        [(id actual (... ...))
+         (do-f (lambda () actual)
+               (... ...)
+               (lambda (v)
+                 (set! actual v))
+               (... ...))]))
+    (define-for-cbr do-f (arg ...)
+      () ; explained below...
+      body)))
+
+; As it turns out, lexical scope gives us a way around this problem.
+; The trick is to iterate expansions of define-for-cbr once for each argument in the function,
+; and that’s why define-for-cbr starts with an apparently useless () after the argument list. 
+(define-syntax define-for-cbr
+  (syntax-rules ()
+    [(define-for-cbr do-f (id0 id ...); ex: 'id0' => 'a', 'id' => 'b'
+       (gens ...) body); gens ... => (define-get/put!-id a get-a put-a!) ...
+     (define-for-cbr do-f (id ...)
+       (gens ... (id0 get put)) body)]
+    [(define-for-cbr do-f ()
+       ((id get put) ...) body)
+     (define (do-f get ... put ...)
+       (define-get/put-id id get put) ...
+       body)]))
+; Step-by-step, expansion proceeds as follows:
+;  (define-for-cbr do-f (a b)
+;    () (swap a b))
+;  => (define-for-cbr do-f (b)
+;       ([a get_1 put_1]) (swap a b))
+;  => (define-for-cbr do-f ()
+;       ([a get_1 put_1] [b get_2 put_2]) (swap a b))
+;  => (define (do-f get_1 get_2 put_1 put_2)
+;       (define-get/put-id a get_1 put_1)
+;       (define-get/put-id b get_2 put_2)
+;       (swap a b))
+
+(define-for-cbr do-swap-cbr (a b)
+  () (swap a b))
+
+(define-cbr (swap-cbr a b)
+  (swap a b))
+
+(let ([x 1] [y 2])
+  (swap-cbr x y)
+  (list x y))
