@@ -104,3 +104,36 @@ val
 (put-val! 4)
 val
 
+
+;; 16.1.6 set! Transformers
+
+; To invoke the macro when val is used with set!, we create an assignment transformer with make-set!-transformer.
+; We must also declare set! as a literal in the syntax-case literal list.
+
+(define-syntax val2
+  (make-set!-transformer
+   (lambda (stx)
+     (syntax-case stx (set!)
+       [val2 (identifier? (syntax val2)) (syntax (get-val))]
+       [(set! val2 e) (syntax (put-val! e))]))))
+
+
+;; 16.1.7 Macro-Generating Macros
+
+(define-syntax-rule (define-get/put-id id get put!)
+  (define-syntax id
+    (make-set!-transformer
+     (lambda (stx)
+       (syntax-case stx (set!)
+         [id (identifier? (syntax id)) (syntax (get))]
+         [(set! id e) (syntax (put! e))])))))
+
+(define-get/put-id val3 get-val put-val!)
+val3
+val2
+val
+(set! val3 11)
+val3
+val2
+val
+
