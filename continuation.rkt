@@ -24,3 +24,23 @@
 (+ 100 (cc 3))
 ; 900
 
+
+(define (find-leaf obj tree)
+  (call/cc
+   (lambda (cc)
+     (letrec ((iter
+	       (lambda (tree)
+		 (cond
+		  ((null?  tree) #f)
+		  ((pair? tree)
+		   (iter (car tree))
+		   (iter (cdr tree)))
+		  (else
+                   (begin
+                     (displayln tree)
+                     (when (eqv? obj tree)
+		       (cc obj))))))))
+       (iter tree)))))
+
+(find-leaf 7 '(1 (2 3) 4 (5 (6 7)))) ; prints all
+(find-leaf 3 '(1 (2 3) 4 (5 (6 7)))) ; prints 1,2,3
